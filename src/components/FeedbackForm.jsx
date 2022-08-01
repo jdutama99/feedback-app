@@ -1,24 +1,33 @@
-import { useState } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import React from 'react'
 import Card from './Shared/Card'
-import RatingSelect  from './RatingSelect'
+import RatingSelect from './RatingSelect'
 import Button from './Shared/Button'
+import FeedbackContext from '../Context/FeedbackContext'
 
-function FeedbackForm({handleAdd}) {
+function FeedbackForm() {
   const [text, setText] = useState('')
   const [btnDisabled, setBtnDisabled] = useState('')
-  const [message, setMessage ] = useState('')
+  const [message, setMessage] = useState('')
   const [rating, setRating] = useState(10)
 
-
+  const { addFeedback, feedbackEdit, updateFeedback } =
+    useContext(FeedbackContext)
+  useEffect(() => {
+    if (feedbackEdit.edit === true) {
+      setBtnDisabled(false)
+      setText(feedbackEdit.item.text)
+      setRating(feedbackEdit.item.rating)
+    }
+  }, [feedbackEdit])
   const handleTextChange = (e) => {
-    if(text === ''){
+    if (text === '') {
       setBtnDisabled(true)
       setMessage(null)
-    }else if(text !== '' && text.trim().length <= 10){
+    } else if (text !== '' && text.trim().length <= 10) {
       setMessage('Text must be at least 10 characters')
       setBtnDisabled(true)
-    } else{
+    } else {
       setMessage(null)
       setBtnDisabled(false)
     }
@@ -26,12 +35,16 @@ function FeedbackForm({handleAdd}) {
   }
   const handleSubmit = (e) => {
     e.preventDefault()
-    if(text.trim().length>10){
-      const newFeedback ={
-        text, 
-        rating
+    if (text.trim().length > 10) {
+      const newFeedback = {
+        text,
+        rating,
       }
-      handleAdd(newFeedback)
+      if (feedbackEdit.edit === true) {
+        updateFeedback(feedbackEdit.item.id, newFeedback)
+      } else {
+        addFeedback(newFeedback)
+      }
       setText('')
     }
   }
@@ -39,7 +52,7 @@ function FeedbackForm({handleAdd}) {
     <Card>
       <form onSubmit={handleSubmit}>
         <h2> How would you rate our service?</h2>
-        <RatingSelect select={(rating)=>setRating(rating)}/>
+        <RatingSelect select={(rating) => setRating(rating)} />
         <div className="input-group">
           <input
             onChange={handleTextChange}
@@ -47,10 +60,12 @@ function FeedbackForm({handleAdd}) {
             placeholder="Write a review"
             value={text}
           />
-          <Button type="submit" isDisabled={btnDisabled}>Send</Button>
+          <Button type="submit" isDisabled={btnDisabled}>
+            Send
+          </Button>
         </div>
 
-        {message && <div className='message'>{message}</div>}
+        {message && <div className="message">{message}</div>}
       </form>
     </Card>
   )
